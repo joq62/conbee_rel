@@ -1,0 +1,10 @@
+{application,conbee_rel,
+             [{description,"An OTP application"},
+              {vsn,"0.1.0"},
+              {registered,[]},
+              {mod,{conbee_rel_app,[]}},
+              {applications,[kernel,stdlib]},
+              {env,[]},
+              {modules,[conbee,conbee_rel_app,conbee_rel_sup]},
+              {licenses,["Apache 2.0"]},
+              {links,[]}]}.
