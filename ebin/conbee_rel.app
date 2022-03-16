@@ -5,6 +5,6 @@
               {mod,{conbee_rel_app,[]}},
               {applications,[kernel,stdlib]},
               {env,[]},
-              {modules,[conbee,conbee_rel_app,conbee_rel_sup]},
+              {modules,[conbee,conbee_rel_app,conbee_rel_sup,lights,sensors]},
               {licenses,["Apache 2.0"]},
               {links,[]}]}.

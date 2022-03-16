@@ -19,9 +19,13 @@
 %% --------------------------------------------------------------------
 -define(SERVER,?MODULE).
 
+
 %% External exports
 -export([
-
+	 status_temp/0,
+	 status_door/0,
+	 status_motion/0,
+	 
 	 ping/0
 	]).
 
@@ -55,6 +59,12 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 %% Application handling
 %% ====================================================================
 
+status_temp()-> 
+    gen_server:call(?SERVER, {status_temp},infinity).
+status_door()-> 
+    gen_server:call(?SERVER, {status_door},infinity).
+status_motion()-> 
+    gen_server:call(?SERVER, {status_motion},infinity).
 %% ====================================================================
 %% Support functions
 %% ====================================================================
@@ -93,8 +103,15 @@ init([]) ->
 %%          {stop, Reason, Reply, State}   | (terminate/2 is called)
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
+handle_call({sensors_raw},_From,State) ->
+   % io:format("~p~n",[{temp,?MODULE,?FUNCTION_NAME,?LINE}]),
+    Reply= sensors:get_info_raw(),
+    {reply, Reply, State};
 
-
+handle_call({sensors},_From,State) ->
+   % io:format("~p~n",[{temp,?MODULE,?FUNCTION_NAME,?LINE}]),
+    Reply= sensors:get_info(),
+    {reply, Reply, State};
 
 
 handle_call({ping},_From, State) ->

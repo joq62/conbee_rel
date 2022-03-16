@@ -24,14 +24,60 @@
 %% --------------------------------------------------------------------
 start()->
     ok=application:start(conbee_rel),
-    ok=t1_test(),
+    pong=conbee:ping(),
+    application:ensure_all_started(gun),
+    ok=t0_test(),
+   % curl_test(),
+    pass_0_test(),
 
-    init:stop(),
+   % init:stop(),
+    ok.
+t0_test()->
+   
+    ok.
+curl_test()->
+    Link="172.17.0.2",
+    Cmd = "curl -s GET \"" ++ Link ++ "\"",
+    Output = os:cmd(Cmd),
+ %   io:format("Output ~p~n",[{Output,?MODULE,?LINE}]),
+    Output.
+
+pass_0_test()->
+    inets:start(),
+    {ok, {{Version, 200, ReasonPhrase}, Headers, Body}} =
+      httpc:request(get,{"https://phoscon.de/discover",[]},[],[{body_format,binary}]),
+    %gl=Body,
+    Map=jsx:decode(Body,[]),
+    
+    io:format("************~p ****************~n",[time()]),
+  
+    Info=sensors:get_info("172.17.0.2",80,"/api/29DD35A891/sensors"),    
+%    io:format("Info ~p~n",[Info]),
+    Sensors=[{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-Info],
+    Sorted=lists:keysort(2,Sensors),
+    [io:format("~p~n",[Sensor])||Sensor<-Sorted],
+    io:format("----------------------------------------------~n"),
+%  glurk=Raw=conbee:sensors_raw(),    
+ %   io:format("Raw ~p~n",[Raw]),
+%    io:format("indoor_temp_1 ~p~n",[Raw]),
+    
+%-------- lights
+    LightInfo=lights:get_info("172.17.0.2",80,"/api/29DD35A891/lights"),    
+%    io:format("Info ~p~n",[Info]),
+    Lights=[{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-LightInfo],
+    SortedLights=lists:keysort(2,Lights),
+    [io:format("~p~n",[Light])||Light<-SortedLights],
+    io:format("----------------------------------------------~n"),
+    
+
     ok.
 
+   % timer:sleep(10*1000),
+   % pass_0().
+    
 
 t1_test()->
-    pong=conbee:ping(),
+  
 
     ok.
 
