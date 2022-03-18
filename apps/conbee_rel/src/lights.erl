@@ -60,17 +60,20 @@ start()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-get_info(ConbeeAddr,ConbeePort,CmdSensors)->
-    extract_info(ConbeeAddr,ConbeePort,CmdSensors).
 get_info()->
-    {ok,ConbeeAddr}=application:get_env(ip),
-    {ok,ConbeePort}=application:get_env(port),
-    {ok,CmdSensors}=application:get_env(cmd_sensors),
-    extract_info(ConbeeAddr,ConbeePort,CmdSensors).
+    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
+    {ok,ConbeePort}=application:get_env(conbee_rel,port),
+    {ok,Crypto}=application:get_env(conbee_rel,crypto),
+    get_info(ConbeeAddr,ConbeePort,Crypto).
 
-extract_info(ConbeeAddr,ConbeePort,CmdSensors)->
+get_info(ConbeeAddr,ConbeePort,Crypto)->
+    Info=extract_info(ConbeeAddr,ConbeePort,Crypto),
+    [{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-Info].
+  
+extract_info(ConbeeAddr,ConbeePort,Crypto)->
     {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
-    Ref=gun:get(ConnPid,CmdSensors),
+    CmdLights="/api/"++Crypto++"/lights",
+    Ref=gun:get(ConnPid,CmdLights),
     Result= get_info(gun:await_body(ConnPid, Ref)),
     ok=gun:close(ConnPid),
     Result.

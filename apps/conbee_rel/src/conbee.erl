@@ -18,7 +18,7 @@
 
 %% --------------------------------------------------------------------
 -define(SERVER,?MODULE).
-
+-define(ConbeeContainer,"deconz").
 
 %% External exports
 -export([
@@ -90,6 +90,8 @@ ping()->
 %%          {stop, Reason}
 %% --------------------------------------------------------------------
 init([]) ->
+    os:cmd("docker restart "++?ConbeeContainer),
+    timer:sleep(5*1000),
     {ok, #state{}
     }.
 

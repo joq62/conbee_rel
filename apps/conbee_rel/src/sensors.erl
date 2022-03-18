@@ -43,9 +43,7 @@ start()->
 %% Returns: non
 %% --------------------------------------------------------------------
 
-%-define(ConbeeAddr,"192.168.0.100").
-%-define(ConbeePort,80).
-%-define(Crypto,"0BDFAC94EE").
+
 %-define(Info,"/api/0BDFAC94EE/sensors").
 %-define(Temp,"/api/0BDFAC94EE/sensors/17").
 %-define(OpenClose,"/api/0BDFAC94EE/sensors/11").
@@ -60,16 +58,19 @@ start()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-get_info(ConbeeAddr,ConbeePort,CmdSensors)->
-    extract_info(ConbeeAddr,ConbeePort,CmdSensors).
 get_info()->
-    {ok,ConbeeAddr}=application:get_env(ip),
-    {ok,ConbeePort}=application:get_env(port),
-    {ok,CmdSensors}=application:get_env(cmd_sensors),
-    extract_info(ConbeeAddr,ConbeePort,CmdSensors).
+    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
+    {ok,ConbeePort}=application:get_env(conbee_rel,port),
+    {ok,Crypto}=application:get_env(conbee_rel,crypto),
+    get_info(ConbeeAddr,ConbeePort,Crypto).
 
-extract_info(ConbeeAddr,ConbeePort,CmdSensors)->
+get_info(ConbeeAddr,ConbeePort,Crypto)->
+    Info=extract_info(ConbeeAddr,ConbeePort,Crypto),
+    [{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-Info].
+
+extract_info(ConbeeAddr,ConbeePort,Crypto)->
     {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
+    CmdSensors="/api/"++Crypto++"/sensors",
     Ref=gun:get(ConnPid,CmdSensors),
     Result= get_info(gun:await_body(ConnPid, Ref)),
     ok=gun:close(ConnPid),
@@ -78,6 +79,7 @@ extract_info(ConbeeAddr,ConbeePort,CmdSensors)->
 get_info({ok,Body})->
     get_info(Body);
 get_info(Body)->
+  %  io:format("Body ~p~n",[{?MODULE,?LINE,Body}]),
     Map=jsx:decode(Body,[]),
     format_info(Map).
 

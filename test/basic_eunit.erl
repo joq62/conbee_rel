@@ -22,6 +22,8 @@
 %% Description: Based on hosts.config file checks which hosts are avaible
 %% Returns: List({HostId,Ip,SshPort,Uid,Pwd}
 %% --------------------------------------------------------------------
+-define(ApiKey,D83FA13F74).
+
 start()->
     ok=application:start(conbee_rel),
     pong=conbee:ping(),
@@ -29,17 +31,25 @@ start()->
     ok=t0_test(),
    % curl_test(),
     pass_0_test(),
+   % t2(),
 
    % init:stop(),
     ok.
+
+% 21B8A3D920
+
+t2()->
+    % http://172.17.0.2:80/api/9FC8DF92DC/lights/2/state    
+    % {"on":true}
+    ok.
 t0_test()->
-   
+    
     ok.
 curl_test()->
     Link="172.17.0.2",
     Cmd = "curl -s GET \"" ++ Link ++ "\"",
     Output = os:cmd(Cmd),
- %   io:format("Output ~p~n",[{Output,?MODULE,?LINE}]),
+    io:format("Output ~p~n",[{Output,?MODULE,?LINE}]),
     Output.
 
 pass_0_test()->
@@ -48,10 +58,13 @@ pass_0_test()->
       httpc:request(get,{"https://phoscon.de/discover",[]},[],[{body_format,binary}]),
     %gl=Body,
     Map=jsx:decode(Body,[]),
+ %   io:format("Map ~p~n",[Map]),
     
     io:format("************~p ****************~n",[time()]),
-  
-    Info=sensors:get_info("172.17.0.2",80,"/api/29DD35A891/sensors"),    
+   % init:stop(),
+   % timer:sleep(3000),
+    Info=sensors:get_info(),  
+ %   Info=sensors:get_info("192.168.0.100",8080,"/api/0BDFAC94EE/sensors"),     
 %    io:format("Info ~p~n",[Info]),
     Sensors=[{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-Info],
     Sorted=lists:keysort(2,Sensors),
@@ -62,14 +75,17 @@ pass_0_test()->
 %    io:format("indoor_temp_1 ~p~n",[Raw]),
     
 %-------- lights
-    LightInfo=lights:get_info("172.17.0.2",80,"/api/29DD35A891/lights"),    
+    LightInfo=lights:get_info(),    
+  %  LightInfo=lights:get_info("192.168.0.100",8080,"/api/0BDFAC94EE/lights"),    
 %    io:format("Info ~p~n",[Info]),
     Lights=[{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-LightInfo],
     SortedLights=lists:keysort(2,Lights),
     [io:format("~p~n",[Light])||Light<-SortedLights],
     io:format("----------------------------------------------~n"),
-    
-
+ 
+    io:format("temp_main_house  ~p~n",[varmdo_mm:temp_main_house()]),
+    io:format("door_main  ~p~n",[varmdo_mm:door_main()]),
+    io:format("presence_hall ~p~n",[varmdo_mm:presence_hall()]),
     ok.
 
    % timer:sleep(10*1000),
