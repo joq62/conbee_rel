@@ -4,7 +4,7 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(sensors).    
+-module(lights).    
      
 %% --------------------------------------------------------------------
 %% Include files
@@ -15,25 +15,93 @@
 
 
 %% External exports
--export([start/0,
+-export([
 	 get_info_raw/0,
 	 get_info/3,
+	 get_state/1,
+	 set_state/2,
 	 get_info/0]). 
 
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
-
+get_state(Id)->
+    
+    glurk.
 
 %% --------------------------------------------------------------------
 %% Function:tes cases
 %% Description: List of test cases 
 %% Returns: non
 %% --------------------------------------------------------------------
-start()-> 
+set_state(Id,State)->
 
-    ok.
+  
+
+    Cmd="/api/"++Crypto++"/lights/"++Id++"/state",
+    Body=case State of
+	     "on"->
+		 "curl -X put -i "++" http://"++ConbeeAddr++":"++ConbeePort++"/api/"++Crypto++"/lights/"++Id++"/state"++" --data {
+"on":true}";
+%		 "{\"on\": \false\"}";
+	     "off"->
+		 "curl -X put -i "++" http://"++ConbeeAddr++":"++ConbeePort++"/api/"++Crypto++"/lights/"++Id++"/state"++" --data {
+"on":false}"
+%		 "{\"on\": \"false\"}"
+	 end,
+
+%	     "on"->
+%		 "{\"on\": \"true\"}";
+%	     "off"->
+%		 "{\"on\": \"false\"}"
+%	 end,
+    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
+    StreamRef = gun:put(ConnPid, Cmd, 
+			[ {<<"content-length">>, integer_to_binary(length(Body))},
+			  {<<"content-type">>, "application/json"}]),
+			%,Body,#{reply_to=>self()}),
+
+    gun:data(ConnPid, StreamRef, fin, Body),
+    print_body(ConnPid),
+    Result=ok=gun:close(ConnPid),
+    Result.
+   
+print_body(ConnPid) ->
+    StreamRef = gun:get(ConnPid, "/"),
+    receive
+        {gun_response, ConnPid, StreamRef, fin, Status, Headers} ->
+            no_data;
+        {gun_response, ConnPid, StreamRef, nofin, Status, Headers} ->
+            receive_data(ConnPid, StreamRef);
+        {'DOWN', _MRef, process, ConnPid, Reason} ->
+            error_logger:error_msg("Oops!"),
+            exit(Reason)
+    after 1000 ->
+        exit(timeout)
+    end.
+
+receive_data(ConnPid,StreamRef) ->
+    receive
+        {gun_data, ConnPid, StreamRef, nofin, Data} ->
+            io:format("~s~n", [Data]),
+            receive_data(ConnPid, StreamRef);
+        {gun_data, ConnPid, StreamRef, fin, Data} ->
+            io:format("~s~n", [Data]);
+        {'DOWN', _MRef, process, ConnPid, Reason} ->
+            error_logger:error_msg("Oops!"),
+            exit(Reason)
+    after 1000 ->
+        exit(timeout)
+    end.
+
+set_state(ConbeeAddr,ConbeePort,Crypto)->
+    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
+    CmdLights="/api/"++Crypto++"/lights",
+    Ref=gun:get(ConnPid,CmdLights),
+    Result= get_info(gun:await_body(ConnPid, Ref)),
+    ok=gun:close(ConnPid),
+    Result.
 
 
 
@@ -43,7 +111,9 @@ start()->
 %% Returns: non
 %% --------------------------------------------------------------------
 
-
+%-define(ConbeeAddr,"192.168.0.100").
+%-define(ConbeePort,80).
+%-define(Crypto,"0BDFAC94EE").
 %-define(Info,"/api/0BDFAC94EE/sensors").
 %-define(Temp,"/api/0BDFAC94EE/sensors/17").
 %-define(OpenClose,"/api/0BDFAC94EE/sensors/11").
@@ -67,11 +137,11 @@ get_info()->
 get_info(ConbeeAddr,ConbeePort,Crypto)->
     Info=extract_info(ConbeeAddr,ConbeePort,Crypto),
     [{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-Info].
-
+  
 extract_info(ConbeeAddr,ConbeePort,Crypto)->
     {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
-    CmdSensors="/api/"++Crypto++"/sensors",
-    Ref=gun:get(ConnPid,CmdSensors),
+    CmdLights="/api/"++Crypto++"/lights",
+    Ref=gun:get(ConnPid,CmdLights),
     Result= get_info(gun:await_body(ConnPid, Ref)),
     ok=gun:close(ConnPid),
     Result.
@@ -79,13 +149,12 @@ extract_info(ConbeeAddr,ConbeePort,Crypto)->
 get_info({ok,Body})->
     get_info(Body);
 get_info(Body)->
-  %  io:format("Body ~p~n",[{?MODULE,?LINE,Body}]),
     Map=jsx:decode(Body,[]),
     format_info(Map).
 
 format_info(Map)->
     L=maps:to_list(Map),
-%    io:format("L=~p~n",[{?MODULE,?LINE,L}]),
+    io:format("L=~p~n",[{?MODULE,?LINE,L}]),
     format_info(L,[]).
 
 format_info([],Formatted)->
@@ -93,66 +162,48 @@ format_info([],Formatted)->
 format_info([{IdBin,Map}|T],Acc)->
     Id=binary_to_list(IdBin),
     Name=binary_to_list(maps:get(<<"name">>,Map)),
-    Type=binary_to_list(maps:get(<<"type">>,Map)),
+    ModelId=binary_to_list(maps:get(<<"modelid">>,Map)),
     %
-    NewAcc=case get_status(Type,Map) of
+    NewAcc=case get_status(ModelId,Map) of
 	       {error,Reason}->
 		   io:format("Error ~p~n",[Reason]),
 		   Acc;
 	{ok,{Key,Value}}->
 	    Status={Key,Value},
-	    [[{name,Name},{id,Id},{type,Type},{status,Status}]|Acc]
+	    [[{name,Name},{id,Id},{type,ModelId},{status,Status}]|Acc]
     end,
     format_info(T,NewAcc).
 
 
-%----------
+get_status("ConBee II",Map)->
+    Z=maps:get(<<"state">>,Map),
+    true=is_map(Z),
+    R=maps:get(<<"reachable">>,Z),
+    {ok,{"reachable",R}};  
 
-% [unmatched,"Daylight",sensors,get_status,137]
- 
- %   [[{name,"Window / Door Sensor"}, {id,"7"},{type,"ZHAOpenClose"},{status,{"open",false}}],
-%-define(door1,"ZHAOpenClose").
+get_status("TRADFRI bulb E27 WW 806lm",Map)->
+    Z=maps:get(<<"state">>,Map),
+    true=is_map(Z),
+    State=case maps:get(<<"on">>,Z) of
+	      true->
+		  "on";
+	      false->
+		  "off"
+	  end,
+    Brightness=maps:get(<<"bri">>,Z),
+    
+    {ok,{"Status",[State,Brightness]}};  
+get_status("TRADFRI control outlet",Map)->
+    Z=maps:get(<<"state">>,Map),
+    true=is_map(Z),
+    State=case maps:get(<<"on">>,Z) of
+	      true->
+		  "on";
+	      false->
+		  "off"
+	  end,
+    {ok,{"State",State}};
 
-%    [{name,"Pressure 6"}, {id,"6"}, {type,"ZHAPressure"}, {status,{"pressure","1045"}}],
-%    [{name,"Humidity 5"}, {id,"5"}, {type,"ZHAHumidity"}, {status,{"humidity","22"}}],
-%    [{name,"Multi Sensor"}, {id,"4"}, {type,"ZHATemperature"}, {status,{"temperature","31.0"}}],
-%-define(indoor_temp_1,"ZHATemperature").
-%    [{name,"Presence 3"}, {id,"3"},  {type,"ZHAPresence"}, {status,{"presence",false}}],
-%    [{name,"Motion Sensor"},{id,"2"},{type,"ZHALightLevel"},{status,{"daylight",false}}]]
-
-
-get_status("ZHATemperature",Map)->
-    Z=maps:get(<<"state">>,Map),
-    true=is_map(Z),
-    R=maps:get(<<"temperature">>,Z),
-    {ok,{"temperature",float_to_list(R/100,[{decimals,1}])}};  
-
-get_status("ZHAHumidity",Map)->
-    Z=maps:get(<<"state">>,Map),
-    true=is_map(Z),
-    R=maps:get(<<"humidity">>,Z),
-    {ok,{"humidity",float_to_list(R/100,[{decimals,0}])}};  
-get_status("ZHAPressure",Map)->
-    Z=maps:get(<<"state">>,Map),
-    true=is_map(Z),
-    R=maps:get(<<"pressure">>,Z),
-    H=integer_to_list(R),
-    {ok,{"pressure",H}};  
-get_status("ZHAOpenClose",Map)->
-    Z=maps:get(<<"state">>,Map),
-    true=is_map(Z),
-    R=maps:get(<<"open">>,Z),
-    {ok,{"open",R}};  
-get_status("ZHALightLevel",Map)->
-    Z=maps:get(<<"state">>,Map),
-    true=is_map(Z),
-    R = maps:get(<<"daylight">>,Z),
-    {ok,{"daylight",R}};  
-get_status("ZHAPresence",Map)->
-    Z=maps:get(<<"state">>,Map),
-    true=is_map(Z),
-    R=maps:get(<<"presence">>,Z),
-    {ok,{"presence",R}};
 get_status(Signal,_Map) ->
     {error,[unmatched,Signal,?MODULE,?FUNCTION_NAME,?LINE]}.
 %% --------------------------------------------------------------------

@@ -1,0 +1,123 @@
+%%% -------------------------------------------------------------------
+%%% Author  : uabjle
+%%% Description :  
+%%% 
+%%% Created : 10 dec 2012
+%%% -------------------------------------------------------------------
+-module(lgh_mm).    
+     
+%% --------------------------------------------------------------------
+%% Include files
+%% --------------------------------------------------------------------
+
+%% --------------------------------------------------------------------
+
+
+
+%% sensors
+-export([
+	 temp_outdoor_room/0,
+	 presence_hall/0
+	]). 
+%% switches
+-export([
+	 state_switch_lamp_kitchen/0,
+	 set_switch_lamp_kitchen/1,
+	
+	 state_switch_lamp_balcony/0,
+	 set_switch_lamp_balcony/1,
+
+	 state_switch_lamp_hall/0,
+	 set_switch_lamp_hall/1
+
+	]). 
+%% lights
+-export([
+	 state_light_outdoor_room/0,
+	 set_light_outdoor_room/1
+	]). 
+
+
+%% ====================================================================
+%% External functions
+%% ====================================================================
+
+%% sensors
+-define(temp_outdoor_room,"8").
+-define(presence_hall,"11"). % (turn on hall and kitchen lamp)
+
+%% lights
+-define(light_balcony,"2"). % (IKEA lamp)
+%% switches
+-define(switch_lamps_kitchen,"3").
+-define(switch_lamps_balcony,"4").
+-define(switch_lamps_hall,"5").
+%% manual switch
+
+
+%% --------------------------------------------------------------------
+%% Function:sensors
+%% Description:  
+%% Returns: non
+%% --------------------------------------------------------------------
+temp_outdoor_room()->
+    Result=case rpc:call(node(),lists,keyfind,[?temp_outdoor_room,2,sensors:get_info()],5000) of
+	       {badrpc,Reason}->
+		   {error,[{badrpc,Reason}]};
+	       false->
+		   {error,[eexists]};
+	       {_,?temp_outdoor_room,"temperature",Temp}->
+		   {ok,Temp}
+	   end,
+    Result.
+
+presence_hall()->
+    Result=case rpc:call(node(),lists,keyfind,[?presence_hall,2,sensors:get_info()],5000) of
+	       {badrpc,Reason}->
+		   {error,[{badrpc,Reason}]};
+	       false->
+		   {error,[eexists]};
+	       {_,?presence_hall,"presence",Presence}->
+		  
+		   {ok,Presence}
+	   end,
+    Result.
+
+
+
+%% --------------------------------------------------------------------
+%% Function:switches
+%% Description:  
+%% Returns: non
+%% --------------------------------------------------------------------
+state_light_outdoor_room()->
+
+    ok.
+set_light_outdoor_room(WantedState)->
+
+
+    ok.
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+state_switch_lamp_kitchen()->
+
+    ok.
+set_switch_lamp_kitchen(WantedState)->
+    
+    ok.
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+state_switch_lamp_kitchen()->
+
+    ok.
+set_switch_lamp_kitchen(WantedState)->
+    
+    ok.

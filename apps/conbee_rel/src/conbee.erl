@@ -157,7 +157,8 @@ handle_cast(_Msg, State) ->
 %%          {noreply, State, Timeout} |
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
-handle_info(_Info, State) ->
+handle_info(Info, State) ->
+    io:format("~p~n",[{?MODULE,?FUNCTION_NAME,?LINE,Info}]),
     %rpc:cast(node(),log,log,[?Log_ticket("unmatched info",[Info])]),
     {noreply, State}.
 

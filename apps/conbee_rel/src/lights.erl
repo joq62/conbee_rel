@@ -15,44 +15,72 @@
 
 
 %% External exports
--export([start/0,
+-export([
 	 get_info_raw/0,
 	 get_info/3,
+	 get_state/1,
+	 set_state/2,
 	 get_info/0]). 
 
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
+get_state(Id)->
+    
+    glurk.
 
+set_state(Id,State)->
+    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
+    {ok,ConbeePort}=application:get_env(conbee_rel,port),
+    {ok,Crypto}=application:get_env(conbee_rel,crypto),
 
+    Cmd="/api/"++Crypto++"/lights/"++Id++"/state",
+    Body=case State of
+	     "on"->
+		 jsx:encode(#{<<"on">> => true});		   
+	     "off"->
+		 jsx:encode(#{<<"on">> => false})
+	 end,
+    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
+    StreamRef = gun:put(ConnPid, Cmd, 
+			[{<<"content-type">>, "application/json"}],Body),
+    Result=do_rec(ConnPid,StreamRef),
+    ok=gun:close(ConnPid),
+    Result.
+   
+do_rec(ConnPid,StreamRef)->
+    io:format("~p~n", [{?MODULE,?LINE}]),
+ %   StreamRef = gun:get(ConnPid, "/"),
+    case gun:await(ConnPid, StreamRef) of
+	{response, fin, Status, Headers} ->
+	    io:format(" no_data ~p~n", [{?MODULE,?LINE}]),
+	    no_data;
+	{response, nofin, Status, Headers} ->
+	    io:format(" ~p~n", [{?MODULE,?LINE}]),
+	    {ok, Body} = gun:await_body(ConnPid, StreamRef),
+	    Body
+    end.
+   
 %% --------------------------------------------------------------------
 %% Function:tes cases
 %% Description: List of test cases 
 %% Returns: non
 %% --------------------------------------------------------------------
-start()-> 
+curl_set_state(Id,"on")->
+    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
+    {ok,ConbeePort}=application:get_env(conbee_rel,port),
+    {ok,Crypto}=application:get_env(conbee_rel,crypto),
+    Cmd="curl -X PUT -i "++" http://"++ConbeeAddr++":"++integer_to_list(ConbeePort)++"/api/"++Crypto++"/lights/"++Id++"/state"++" -d {on:true}",
+    io:format("Cmd ~p~n",[Cmd]),
+    os:cmd(Cmd);
 
-    ok.
-
-
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-
-%-define(ConbeeAddr,"192.168.0.100").
-%-define(ConbeePort,80).
-%-define(Crypto,"0BDFAC94EE").
-%-define(Info,"/api/0BDFAC94EE/sensors").
-%-define(Temp,"/api/0BDFAC94EE/sensors/17").
-%-define(OpenClose,"/api/0BDFAC94EE/sensors/11").
-%-define(Motion,"/api/0BDFAC94EE/sensors/12").
-
-
-
+curl_set_state(Id,"off") ->
+    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
+    {ok,ConbeePort}=application:get_env(conbee_rel,port),
+    {ok,Crypto}=application:get_env(conbee_rel,crypto),
+    os:cmd("curl -X PUT -i "++" http://"++ConbeeAddr++":"++integer_to_list(ConbeePort)++"/api/"++Crypto++"/lights/"++Id++"/state"++" -d {on:false}").
+  
 
 
 %% --------------------------------------------------------------------
@@ -86,7 +114,7 @@ get_info(Body)->
 
 format_info(Map)->
     L=maps:to_list(Map),
-    io:format("L=~p~n",[{L,?MODULE,?LINE}]),
+    io:format("L=~p~n",[{?MODULE,?LINE,L}]),
     format_info(L,[]).
 
 format_info([],Formatted)->
@@ -135,6 +163,7 @@ get_status("TRADFRI control outlet",Map)->
 		  "off"
 	  end,
     {ok,{"State",State}};
+
 get_status(Signal,_Map) ->
     {error,[unmatched,Signal,?MODULE,?FUNCTION_NAME,?LINE]}.
 %% --------------------------------------------------------------------

@@ -22,15 +22,15 @@
 %% Description: Based on hosts.config file checks which hosts are avaible
 %% Returns: List({HostId,Ip,SshPort,Uid,Pwd}
 %% --------------------------------------------------------------------
--define(ApiKey,D83FA13F74).
+
 
 start()->
     ok=application:start(conbee_rel),
     pong=conbee:ping(),
     application:ensure_all_started(gun),
-    ok=t0_test(),
-   % curl_test(),
-    pass_0_test(),
+    read_test(),
+    set_test(),
+
    % t2(),
 
    % init:stop(),
@@ -38,6 +38,41 @@ start()->
 
 % 21B8A3D920
 
+set_test()->
+    % set light on/off
+    io:format("set_test ~p~n",[glurk]),
+    io:format("set 3 ON ~p~n",[lights:set_state("3","on")]),
+    io:format("set 4 ON ~p~n",[lights:set_state("4","on")]),
+    io:format("set 4 ON ~p~n",[lights:set_state("5","on")]),
+    timer:sleep(2000),
+    io:format("set 5 OFF ~p~n",[lights:set_state("5","off")]),
+    io:format("set 4 OFF ~p~n",[lights:set_state("4","off")]),
+    io:format("set 3 OFF ~p~n",[lights:set_state("3","off")]),
+  %  ok=lights:set_state("4","on"),
+  %  ok=lights:set_state("5","on"),
+  %  timer:sleep(2000),
+  %  gl=lights:set_state("5","off"),
+    
+    ok.
+    
+
+
+rec()->
+    receive
+	Msg->
+	    case Msg of
+		{gun_up,_,http}->
+		    io:format("Msg ~p~n",[{?MODULE,?LINE,Msg}]),
+		    rec();
+		{gun_response,_,_,nofin,200,_}->
+		    io:format("Msg ~p~n",[{?MODULE,?LINE,Msg}]),
+		    rec();
+		_ ->
+		    io:format("Msg ~p~n",[{?MODULE,?LINE,Msg}]),
+		    rec()
+	    end
+    end.
+			    
 t2()->
     % http://172.17.0.2:80/api/9FC8DF92DC/lights/2/state    
     % {"on":true}
@@ -52,7 +87,7 @@ curl_test()->
     io:format("Output ~p~n",[{Output,?MODULE,?LINE}]),
     Output.
 
-pass_0_test()->
+read_test()->
     inets:start(),
     {ok, {{Version, 200, ReasonPhrase}, Headers, Body}} =
       httpc:request(get,{"https://phoscon.de/discover",[]},[],[{body_format,binary}]),
@@ -76,7 +111,7 @@ pass_0_test()->
     
 %-------- lights
     LightInfo=lights:get_info(),    
-  %  LightInfo=lights:get_info("192.168.0.100",8080,"/api/0BDFAC94EE/lights"),    
+ 
 %    io:format("Info ~p~n",[Info]),
     Lights=[{Type,Id,Key,Value}||[{name,Name},{id,Id},{type,Type},{status,{Key,Value}}]<-LightInfo],
     SortedLights=lists:keysort(2,Lights),
