@@ -44,7 +44,7 @@
 %% Returns: non
 %% --------------------------------------------------------------------
 set(Name,State)->
-    {ok,{_Name,NumId,_ModelId,_StateMap}}=lib_conbee:device(?Type,Name),
+    {ok,[{_Name,NumId,_ModelId,_StateMap}]}=lib_conbee:device(?Type,Name),
     {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
     {ok,ConbeePort}=application:get_env(conbee_rel,port),
     {ok,Crypto}=application:get_env(conbee_rel,crypto),
@@ -69,7 +69,7 @@ set(Name,State)->
 %% Returns: non
 %% --------------------------------------------------------------------
 get_bri(Name)->
-    {ok,{_Name,_NumId,_ModelId,StateMap}}=lib_conbee:device(?Type,Name),
+    {ok,[{_Name,_NumId,_ModelId,StateMap}]}=lib_conbee:device(?Type,Name),
      maps:get(<<"bri">>,StateMap).
 
 
@@ -79,8 +79,8 @@ get_bri(Name)->
 %% Returns: non
 %% --------------------------------------------------------------------
 set_bri(Name,Brightness)->
-    {ok,{_Name,NumId,_ModelId,_StateMap}}=lib_conbee:device(?Type,Name),
-    {ok,{_Name,NumId,_ModelId,_StateMap}}=lib_conbee:device(?Type,Name),
+    {ok,[{_Name,NumId,_ModelId,_StateMap}]}=lib_conbee:device(?Type,Name),
+  
     {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
     {ok,ConbeePort}=application:get_env(conbee_rel,port),
     {ok,Crypto}=application:get_env(conbee_rel,crypto),
@@ -101,7 +101,7 @@ set_bri(Name,Brightness)->
 %% Returns: non
 %% --------------------------------------------------------------------
 is_on(Name)->
-    {ok,{_Name,_NumId,_ModelId,StateMap}}=lib_conbee:device(?Type,Name),
+    {ok,[{_Name,_NumId,_ModelId,StateMap}]}=lib_conbee:device(?Type,Name),
     maps:get(<<"on">>,StateMap).
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -109,5 +109,5 @@ is_on(Name)->
 %% Returns: non
 %% --------------------------------------------------------------------
 reachable(Name)->
-    {ok,{_Name,_NumId,_ModelId,StateMap}}=lib_conbee:device(?Type,Name),
+    {ok,[{_Name,_NumId,_ModelId,StateMap}]}=lib_conbee:device(?Type,Name),
      maps:get(<<"reachable">>,StateMap).

@@ -72,8 +72,8 @@ device(Type,WantedName)->
 					     WantedName=:=Name] of
 	       []->
 		   {error,[eexists,Type,WantedName]};
-	       [{Name,NumId,ModelId,State}] ->
-		   {ok,{Name,NumId,ModelId,State}}
+	       List->
+		   {ok,List}
 	   end,
     Result.
 	

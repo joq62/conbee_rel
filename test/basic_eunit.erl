@@ -28,14 +28,25 @@ start()->
     ok=application:start(conbee_rel),
     pong=conbee:ping(),
     application:ensure_all_started(gun),
-
+    io:format("lights ~p~n",[lib_conbee:all_info("lights")]),
+    io:format("sensors ~p~n",[lib_conbee:all_info("sensors")]),
     tradfri_ww_test(),
     tradfri_control_outlet(),
+    sensors_test(),
+ 
    % loop(), 
  
    % t2(),
 
    % init:stop(),
+    ok.
+sensors_test()->
+    io:format("temp ~p~n",[lumi_weather:temp("temp_indoor")]),
+    io:format("humidity ~p~n",[lumi_weather:humidity("temp_indoor")]),
+    io:format("pressure ~p~n",[lumi_weather:pressure("temp_indoor")]),
+
+    io:format("is_open ~p~n",[lumi_sensor_magnet_aq2:is_open("door_main_entrance")]),
+    io:format("is_presence ~p~n",[lumi_sensor_motion_aq2:is_presence("presence_hall")]),
     ok.
 
 tradfri_control_outlet()->

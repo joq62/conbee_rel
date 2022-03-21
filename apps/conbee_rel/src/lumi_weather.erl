@@ -4,13 +4,13 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(tradfri_control_outlet).    
+-module(lumi_weather).    
      
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--define(ModelId,"TRADFRI control outlet").
--define(Type,"lights").
+-define(ModelId,"lumi.weather").
+-define(Type,"sensors").
 %% --------------------------------------------------------------------
 %   {"TRADFRI control outlet",
 %     "2",
@@ -23,58 +23,47 @@
 
 %% External exports
 -export([
-	 is_on/1,
-	 set/2,
-	 reachable/1
-	 
+	 temp/1,
+	 humidity/1,
+	 pressure/1
 	]). 
 
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
 
+temp(Name)->
+    {ok,List}=lib_conbee:device(?Type,Name),
+    [TempRaw]=[maps:get(<<"temperature">>,StateMap)||{_Name,_NumId,_ModelId,StateMap}<-List,
+					   lists:member( <<"temperature">>,maps:keys(StateMap))],
+    float_to_list(TempRaw/100,[{decimals,1}]).
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+
+humidity(Name)->
+    {ok,List}=lib_conbee:device(?Type,Name),
+    [HumidityRaw]=[maps:get(<<"humidity">>,StateMap)||{_Name,_NumId,_ModelId,StateMap}<-List,
+					   lists:member( <<"humidity">>,maps:keys(StateMap))],
+    float_to_list(HumidityRaw/100,[{decimals,1}])++"%".
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-set(Name,State)->
-    {ok,[{_Name,NumId,_ModelId,_StateMap}]}=lib_conbee:device(?Type,Name),
-    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
-    {ok,ConbeePort}=application:get_env(conbee_rel,port),
-    {ok,Crypto}=application:get_env(conbee_rel,crypto),
 
-    Cmd="/api/"++Crypto++"/"++?Type++"/"++NumId++"/state",
-    Body=case State of
-	     "on"->
-		 jsx:encode(#{<<"on">> => true});		   
-	     "off"->
-		 jsx:encode(#{<<"on">> => false})
-	 end,
-    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
-    StreamRef = gun:put(ConnPid, Cmd, 
-			[{<<"content-type">>, "application/json"}],Body),
-    Result=lib_conbee:get_reply(ConnPid,StreamRef),
-    ok=gun:close(ConnPid),
-    Result.
-
-
-
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-is_on(Name)->
-    {ok,[{_Name,_NumId,_ModelId,StateMap}]}=lib_conbee:device(?Type,Name),
-    maps:get(<<"on">>,StateMap).
-%% --------------------------------------------------------------------
-%% Function:start/0 
-%% Description: Initiate the eunit tests, set upp needed processes etc
-%% Returns: non
-%% --------------------------------------------------------------------
-reachable(Name)->
-    {ok,[{_Name,_NumId,_ModelId,StateMap}]}=lib_conbee:device(?Type,Name),
-     maps:get(<<"reachable">>,StateMap).
+pressure(Name)->
+    {ok,List}=lib_conbee:device(?Type,Name),
+    [PressureRaw]=[maps:get(<<"pressure">>,StateMap)||{_Name,_NumId,_ModelId,StateMap}<-List,
+					   lists:member( <<"pressure">>,maps:keys(StateMap))],
+    integer_to_list(PressureRaw).
+    
