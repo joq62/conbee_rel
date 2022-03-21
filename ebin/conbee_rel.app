@@ -5,7 +5,9 @@
               {mod,{conbee_rel_app,[]}},
               {applications,[kernel,stdlib]},
               {env,[]},
-              {modules,[conbee,conbee_rel_app,conbee_rel_sup,lights,sensors,
+              {modules,[conbee,conbee_rel_app,conbee_rel_sup,lib_conbee,
+                        lights,sensors,tradfri_bulb_e27_cws_806lm,
+                        tradfri_bulb_e27_ww_806lm,tradfri_control_outlet,
                         varmdo_mm]},
               {licenses,["Apache 2.0"]},
               {links,[]}]}.

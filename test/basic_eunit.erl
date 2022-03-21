@@ -28,13 +28,61 @@ start()->
     ok=application:start(conbee_rel),
     pong=conbee:ping(),
     application:ensure_all_started(gun),
-    read_test(),
-    set_test(),
 
+    tradfri_ww_test(),
+    tradfri_control_outlet(),
+   % loop(), 
+ 
    % t2(),
 
    % init:stop(),
     ok.
+
+tradfri_control_outlet()->
+     true=tradfri_control_outlet:reachable("lamp_hall"),
+    io:format("is_on ~p~n",[tradfri_control_outlet:is_on("lamp_hall")]),
+    tradfri_control_outlet:set("lamp_hall","on"),
+    timer:sleep(2000),
+    tradfri_control_outlet:set("lamp_hall","off"),   
+    ok.
+
+
+  
+tradfri_ww_test()->
+    true=tradfri_bulb_e27_ww_806lm:reachable("outdoor_lamp"),
+    io:format("is_on ~p~n",[tradfri_bulb_e27_ww_806lm:is_on("outdoor_lamp")]),
+    io:format("bri ~p~n",[tradfri_bulb_e27_ww_806lm:get_bri("outdoor_lamp")]),
+    tradfri_bulb_e27_ww_806lm:set("outdoor_lamp","on"),
+    timer:sleep(2000),
+     io:format("set_bri ~p~n",[tradfri_bulb_e27_ww_806lm:set_bri("outdoor_lamp",200)]),
+    
+    timer:sleep(3000),
+    io:format("set_bri ~p~n",[tradfri_bulb_e27_ww_806lm:set_bri("outdoor_lamp",2)]),
+    timer:sleep(3000),
+    tradfri_bulb_e27_ww_806lm:set("outdoor_lamp","off"),   
+    ok.
+
+
+t1_test()->
+    io:format("lights ~p~n",[lib_conbee:all_info("lights")]),
+    io:format("sensors ~p~n",[lib_conbee:all_info("sensors")]),
+    
+    {ok,{"TRADFRI bulb E27 CWS 806lm","6",
+	 _}}=lib_conbee:device("lights","TRADFRI bulb E27 CWS 806lm"),
+    {error,[eexists,"sensors","TRADFRI bulb E27 CWS 806lm"]}=lib_conbee:device("sensors","TRADFRI bulb E27 CWS 806lm"),
+    ok.
+
+
+
+
+loop()->
+    read_test(),
+    set_test(),
+    timer:sleep(2000),
+    loop().
+
+
+
 
 % 21B8A3D920
 
@@ -43,11 +91,13 @@ set_test()->
     io:format("set_test ~p~n",[glurk]),
     io:format("set 3 ON ~p~n",[lights:set_state("3","on")]),
     io:format("set 4 ON ~p~n",[lights:set_state("4","on")]),
-    io:format("set 4 ON ~p~n",[lights:set_state("5","on")]),
-    timer:sleep(2000),
+    io:format("set 5 ON ~p~n",[lights:set_state("5","on")]),
+    io:format("set 6 ON ~p~n",[lights:set_state("6","on")]),
+    timer:sleep(4000),
     io:format("set 5 OFF ~p~n",[lights:set_state("5","off")]),
     io:format("set 4 OFF ~p~n",[lights:set_state("4","off")]),
     io:format("set 3 OFF ~p~n",[lights:set_state("3","off")]),
+    io:format("set 6 OFF ~p~n",[lights:set_state("6","off")]),
   %  ok=lights:set_state("4","on"),
   %  ok=lights:set_state("5","on"),
   %  timer:sleep(2000),
@@ -126,11 +176,6 @@ read_test()->
    % timer:sleep(10*1000),
    % pass_0().
     
-
-t1_test()->
-  
-
-    ok.
 
 
 %% --------------------------------------------------------------------

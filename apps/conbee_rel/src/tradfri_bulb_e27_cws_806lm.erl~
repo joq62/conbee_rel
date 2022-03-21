@@ -4,59 +4,141 @@
 %%% 
 %%% Created : 10 dec 2012
 %%% -------------------------------------------------------------------
--module(lights).    
+-module(tradfri_bulb_e27_cws_806lm).    
      
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
-
+-define(modelid,<<"TRADFRI bulb E27 CWS 806lm">>).
 %% --------------------------------------------------------------------
+%   <<"state">> =>
+%    #{<<"alert">> => <<"none">>,<<"bri">> => 1,
+%                    <<"colormode">> => <<"xy">>,<<"ct">> => 250,
+%                    <<"effect">> => <<"none">>,<<"hue">> => 26317,
+%                    <<"on">> => false,<<"reachable">> => true,
+%                    <<"sat">> => 236,
+%                    <<"xy">> => [0.151,0.4839]},
 
 
 
 %% External exports
 -export([
 	 get_info_raw/0,
+	 get_info/3,
 	 get_state/1,
 	 set_state/2,
-
-	 get_info/3,
-	 get_info/0
-	]). 
+	 get_info/0]). 
 
 
 %% ====================================================================
 %% External functions
 %% ====================================================================
-get_state(Id)->
+get_state(Map)->
+    Z=maps:get(<<"state">>,Map),
+    true=is_map(Z),
+    State=case maps:get(<<"on">>,Z) of
+	      true->
+		  "on";
+	      false->
+		  "off"
+	  end,
+    Brightness=maps:get(<<"bri">>,Z),
     
+    {ok,{"Status",[State,Brightness]}};  
     glurk.
-
-set_state(Id,State)->
-    {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
-    {ok,ConbeePort}=application:get_env(conbee_rel,port),
-    {ok,Crypto}=application:get_env(conbee_rel,crypto),
-
-    Cmd="/api/"++Crypto++"/lights/"++Id++"/state",
-    Body=case State of
-	     "on"->
-		 jsx:encode(#{<<"on">> => true});		   
-	     "off"->
-		 jsx:encode(#{<<"on">> => false})
-	 end,
-    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
-    StreamRef = gun:put(ConnPid, Cmd, 
-			[{<<"content-type">>, "application/json"}],Body),
-    Result=lib_conbee:get_reply(ConnPid,StreamRef),
-    ok=gun:close(ConnPid),
-    Result.
-   
 
 %% --------------------------------------------------------------------
 %% Function:tes cases
 %% Description: List of test cases 
 %% Returns: non
 %% --------------------------------------------------------------------
+set_state(Id,State)->
+
+  
+
+    Cmd="/api/"++Crypto++"/lights/"++Id++"/state",
+    Body=case State of
+	     "on"->
+		 "curl -X put -i "++" http://"++ConbeeAddr++":"++ConbeePort++"/api/"++Crypto++"/lights/"++Id++"/state"++" --data {
+"on":true}";
+%		 "{\"on\": \false\"}";
+	     "off"->
+		 "curl -X put -i "++" http://"++ConbeeAddr++":"++ConbeePort++"/api/"++Crypto++"/lights/"++Id++"/state"++" --data {
+"on":false}"
+%		 "{\"on\": \"false\"}"
+	 end,
+
+%	     "on"->
+%		 "{\"on\": \"true\"}";
+%	     "off"->
+%		 "{\"on\": \"false\"}"
+%	 end,
+    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
+    StreamRef = gun:put(ConnPid, Cmd, 
+			[ {<<"content-length">>, integer_to_binary(length(Body))},
+			  {<<"content-type">>, "application/json"}]),
+			%,Body,#{reply_to=>self()}),
+
+    gun:data(ConnPid, StreamRef, fin, Body),
+    print_body(ConnPid),
+    Result=ok=gun:close(ConnPid),
+    Result.
+   
+print_body(ConnPid) ->
+    StreamRef = gun:get(ConnPid, "/"),
+    receive
+        {gun_response, ConnPid, StreamRef, fin, Status, Headers} ->
+            no_data;
+        {gun_response, ConnPid, StreamRef, nofin, Status, Headers} ->
+            receive_data(ConnPid, StreamRef);
+        {'DOWN', _MRef, process, ConnPid, Reason} ->
+            error_logger:error_msg("Oops!"),
+            exit(Reason)
+    after 1000 ->
+        exit(timeout)
+    end.
+
+receive_data(ConnPid,StreamRef) ->
+    receive
+        {gun_data, ConnPid, StreamRef, nofin, Data} ->
+            io:format("~s~n", [Data]),
+            receive_data(ConnPid, StreamRef);
+        {gun_data, ConnPid, StreamRef, fin, Data} ->
+            io:format("~s~n", [Data]);
+        {'DOWN', _MRef, process, ConnPid, Reason} ->
+            error_logger:error_msg("Oops!"),
+            exit(Reason)
+    after 1000 ->
+        exit(timeout)
+    end.
+
+set_state(ConbeeAddr,ConbeePort,Crypto)->
+    {ok, ConnPid} = gun:open(ConbeeAddr,ConbeePort),
+    CmdLights="/api/"++Crypto++"/lights",
+    Ref=gun:get(ConnPid,CmdLights),
+    Result= get_info(gun:await_body(ConnPid, Ref)),
+    ok=gun:close(ConnPid),
+    Result.
+
+
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+
+%-define(ConbeeAddr,"192.168.0.100").
+%-define(ConbeePort,80).
+%-define(Crypto,"0BDFAC94EE").
+%-define(Info,"/api/0BDFAC94EE/sensors").
+%-define(Temp,"/api/0BDFAC94EE/sensors/17").
+%-define(OpenClose,"/api/0BDFAC94EE/sensors/11").
+%-define(Motion,"/api/0BDFAC94EE/sensors/12").
+
+
+
+
 
 %% --------------------------------------------------------------------
 %% Function:start/0 

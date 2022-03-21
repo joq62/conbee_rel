@@ -17,12 +17,10 @@
 %% External exports
 -export([
 	 get_info_raw/0,
+	 get_info/3,
 	 get_state/1,
 	 set_state/2,
-
-	 get_info/3,
-	 get_info/0
-	]). 
+	 get_info/0]). 
 
 
 %% ====================================================================

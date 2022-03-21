@@ -1,0 +1,87 @@
+%%% -------------------------------------------------------------------
+%%% Author  : uabjle
+%%% Description :  
+%%% 
+%%% Created : 10 dec 2012
+%%% -------------------------------------------------------------------
+-module(tradfri_bulb_e27_ww_806lm).    
+     
+%% --------------------------------------------------------------------
+%% Include files
+%% --------------------------------------------------------------------
+-define(ModelId,"TRADFRI bulb E27 WW 806lm").
+-define(Type,"lights").
+%% --------------------------------------------------------------------
+%   {"TRADFRI bulb E27 WW 806lm",
+%     "2",
+%         #{<<"alert">> => <<"none">>,
+%           <<"bri">> => 0,
+%           <<"on">> => false,
+%           <<"reachable">> => false}},
+
+
+
+
+%% External exports
+-export([
+	 is_on/1,
+	 set/2,
+	 get_bri/1,
+	 set_bri/2,
+	 reachable/1
+	 
+	]). 
+
+
+%% ====================================================================
+%% External functions
+%% ====================================================================
+
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+set(State,Name)->
+    
+    ok.
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+get_bri(Name)->
+    
+    ok.
+
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+set_bri(Brightness,Name)->
+    
+    ok.
+
+
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+is_on(Name)->
+    
+    ok.
+%% --------------------------------------------------------------------
+%% Function:start/0 
+%% Description: Initiate the eunit tests, set upp needed processes etc
+%% Returns: non
+%% --------------------------------------------------------------------
+reachable(Name)->
+    {_,Id,StateMap}=lib_conbee:device(?Type,Name),
+    
+
+    ok.
