@@ -46,7 +46,13 @@ sensors_test()->
     io:format("pressure ~p~n",[lumi_weather:pressure("temp_indoor")]),
 
     io:format("is_open ~p~n",[lumi_sensor_magnet_aq2:is_open("door_main_entrance")]),
+
     io:format("is_presence ~p~n",[lumi_sensor_motion_aq2:is_presence("presence_hall")]),
+    io:format("is_dark ~p~n",[lumi_sensor_motion_aq2:is_dark("presence_hall")]),
+    io:format("is_daylight ~p~n",[lumi_sensor_motion_aq2:is_daylight("presence_hall")]),
+    io:format("lightlevel ~p~n",[lumi_sensor_motion_aq2:lightlevel("presence_hall")]),
+    io:format("lux ~p~n",[lumi_sensor_motion_aq2:lux("presence_hall")]),
+
     ok.
 
 tradfri_control_outlet()->
