@@ -87,7 +87,7 @@ device(Type,WantedName)->
 all_info(Type)->
     {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
     {ok,ConbeePort}=application:get_env(conbee_rel,port),
-    {ok,Crypto}=application:get_env(conbee_rel,crypto),
+    {ok,Crypto}=application:get_env(conbee_rel,key),
     all_info(ConbeeAddr,ConbeePort,Crypto,Type).
 
 all_info(ConbeeAddr,ConbeePort,Crypto,Type)->

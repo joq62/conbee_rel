@@ -30,9 +30,13 @@ start()->
     application:ensure_all_started(gun),
     io:format("lights ~p~n",[lib_conbee:all_info("lights")]),
     io:format("sensors ~p~n",[lib_conbee:all_info("sensors")]),
-    tradfri_ww_test(),
-    tradfri_control_outlet(),
-    sensors_test(),
+   
+    lamp_test(),
+    switch_test(),
+   
+    %tradfri_ww_test(),
+   % tradfri_control_outlet(),
+   % sensors_test(),
  
    % loop(), 
  
@@ -52,6 +56,57 @@ sensors_test()->
     io:format("is_daylight ~p~n",[lumi_sensor_motion_aq2:is_daylight("presence_hall")]),
     io:format("lightlevel ~p~n",[lumi_sensor_motion_aq2:lightlevel("presence_hall")]),
     io:format("lux ~p~n",[lumi_sensor_motion_aq2:lux("presence_hall")]),
+
+    ok.
+lamp_test()->
+    tradfri_bulb_e27_ww_806lm:set("lamp_joqroom","off"),
+    tradfri_bulb_e27_ww_806lm:set_bri("lamp_joqroom",0),
+    timer:sleep(1000),
+    tradfri_bulb_e27_ww_806lm:set("lamp_joqroom","on"),
+    timer:sleep(1000),
+    loop(280,"lamp_joqroom"),
+    tradfri_bulb_e27_ww_806lm:set("lamp_joqroom","off"),
+    ok.
+
+loop(0,LampId)->
+    tradfri_bulb_e27_ww_806lm:set_bri(LampId,0),
+    io:format("Brigthness ~p~n",[0]),
+    timer:sleep(1000),
+    ok;
+loop(N,LampId)->
+    io:format("Brigthness ~p~n",[N]),
+    tradfri_bulb_e27_ww_806lm:set_bri(LampId,N),
+    timer:sleep(2000),    
+    loop(N-20,LampId).
+
+switch_test()->
+    lgh_mm_test:switch_set_off("switch_lamp_balcony"),
+    lgh_mm_test:switch_set_off("switch_lamp_kitchen"),
+    lgh_mm_test:switch_set_off("switch_lamp_hall"),
+
+    true=lgh_mm_test:switch_is_reachable("switch_lamp_balcony"),
+    true=lgh_mm_test:switch_is_reachable("switch_lamp_kitchen"),
+    true=lgh_mm_test:switch_is_reachable("switch_lamp_hall"),
+  
+    false=lgh_mm_test:switch_is_on("switch_lamp_balcony"),
+    false=lgh_mm_test:switch_is_on("switch_lamp_kitchen"),
+    false=lgh_mm_test:switch_is_on("switch_lamp_hall"),
+  
+    lgh_mm_test:switch_set_on("switch_lamp_balcony"),
+    lgh_mm_test:switch_set_on("switch_lamp_kitchen"),
+    lgh_mm_test:switch_set_on("switch_lamp_hall"),
+    
+    true=lgh_mm_test:switch_is_on("switch_lamp_balcony"),
+    true=lgh_mm_test:switch_is_on("switch_lamp_kitchen"),
+    true=lgh_mm_test:switch_is_on("switch_lamp_hall"),
+
+    lgh_mm_test:switch_set_off("switch_lamp_balcony"),
+    lgh_mm_test:switch_set_off("switch_lamp_kitchen"),
+    lgh_mm_test:switch_set_off("switch_lamp_hall"),
+    
+    false=lgh_mm_test:switch_is_on("switch_lamp_balcony"),
+    false=lgh_mm_test:switch_is_on("switch_lamp_kitchen"),
+    false=lgh_mm_test:switch_is_on("switch_lamp_hall"),
 
     ok.
 

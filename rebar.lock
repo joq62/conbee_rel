@@ -1,7 +1,7 @@
 {"1.1.0",
 [{<<"cowlib">>,
   {git,"https://github.com/ninenines/cowlib",
-       {ref,"0f5c2f8922c89c58f51696cce690245cbdc5f327"}},
+       {ref,"ce6798c6b2e95b6a34c6a76d2489eaf159827d80"}},
   0},
  {<<"gun">>,
   {git,"https://github.com/ninenines/gun",

@@ -44,7 +44,7 @@ set(Name,State)->
     {ok,[{_Name,NumId,_ModelId,_StateMap}]}=lib_conbee:device(?Type,Name),
     {ok,ConbeeAddr}=application:get_env(conbee_rel,addr),
     {ok,ConbeePort}=application:get_env(conbee_rel,port),
-    {ok,Crypto}=application:get_env(conbee_rel,crypto),
+    {ok,Crypto}=application:get_env(conbee_rel,key),
 
     Cmd="/api/"++Crypto++"/"++?Type++"/"++NumId++"/state",
     Body=case State of
